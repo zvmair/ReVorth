@@ -1,0 +1,17 @@
+{
+  "name": "revorth",
+  "version": "1.0.0",
+  "description": "AI valuation tool for thrifted fashion",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "latest",
+    "@supabase/supabase-js": "^2.103.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

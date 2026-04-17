@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ReVorth</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top App Bar -->
+        <header class="app-header">
+            <div class="header-left">
+                <i class="ph ph-shopping-cart-simple buy-scans-icon" id="buy-scans-btn" title="Buy Scans"></i>
+            </div>
+            <div class="logo"><span class="text-accent">✦</span> ReVorth</div>
+            <div class="header-right">
+                <i class="ph ph-user profile-icon" id="profile-btn" title="Profile"></i>
+            </div>
+        </header>
+
+        <!-- Main Scanner View (Default) -->
+        <main class="view-scanner active" id="view-scanner">
+            <div class="scanner-text">
+                <h1>Discover Worth</h1>
+                <p>Tap to scan your thrift finds and instantly see the original price and market value.</p>
+            </div>
+            
+            <div class="scan-button-wrapper" id="scan-btn">
+                <div class="scan-button">
+                    <i class="ph ph-camera"></i>
+                </div>
+                <!-- Hidden file input for multiple image selections -->
+                <input type="file" id="file-input" accept="image/*" multiple class="hidden">
+            </div>
+            <div class="staging-area-wrapper hidden" id="staging-area">
+                <div class="thumbnails-container" id="thumbnails-container"></div>
+                <button class="btn-primary w-100" id="analyze-btn">Analyze Item</button>
+            </div>
+
+            <div class="pro-tip">
+                💡 Pro Tip: For best results, capture multiple photos of your item, including labels, tags, and distinctive details.
+            </div>
+        </main>
+
+        <!-- Loading View -->
+        <main class="view-loading" id="view-loading">
+            <div class="radar">
+                <img id="preview-img" src="" alt="Scanning">
+                <div class="sweep"></div>
+            </div>
+            <h2 class="pulsate-text">Analyzing Find...</h2>
+            <p id="loading-stage">Identifying brand markers</p>
+        </main>
+
+        <!-- Result View -->
+        <main class="view-result" id="view-result">
+            <div class="result-img-wrapper">
+                <img id="res-img" src="" alt="Result Item">
+                <div class="auth-badge">
+                    <i class="ph ph-shield-check"></i>
+                    <span id="res-auth">98% Authentic</span>
+                </div>
+            </div>
+            
+            <div class="result-card">
+                <div class="r-header">
+                    <h2 id="res-brand">Brand Name</h2>
+                    <p id="res-type">Item Type</p>
+                </div>
+                
+                <div class="r-price-container">
+                    <div class="r-price-box original">
+                        <span class="label">Orig Retail</span>
+                        <h2 id="res-og-value">--</h2>
+                    </div>
+                    <div class="r-price-box thrift">
+                        <span class="label">Est Thrift Value</span>
+                        <h1 id="res-value">--</h1>
+                    </div>
+                </div>
+
+                <div class="stars-container">
+                    <span style="font-size: 1rem; color: var(--text-secondary); align-self: center; margin-right: 0.5rem;">Rarity:</span>
+                    <div id="res-stars" style="display:flex; gap: 0.25rem;"></div>
+                </div>
+
+                <div class="product-link-wrapper hidden" id="res-link-wrapper">
+                    <details class="market-dropdown-block" id="res-links-dropdown">
+                        <summary>View Active Market Listings ▾</summary>
+                        <div class="dropdown-links" id="links-container">
+                            <!-- Javascript will inject native links here -->
+                        </div>
+                    </details>
+                </div>
+
+                <div class="r-details">
+                    <div class="detail">
+                        <i class="ph ph-calendar-blank text-accent"></i>
+                        <div>
+                            <span class="label">Era</span>
+                            <p id="res-era" class="strong">1990s</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="r-history" style="margin-bottom: 1rem;">
+                    <span class="label">Context</span>
+                    <p id="res-history">History text goes here.</p>
+                </div>
+
+                <div class="auth-guide-box">
+                    <h3><i class="ph ph-magnifying-glass"></i> Authentication Guide</h3>
+                    <p id="res-auth-tips">Specific authentication tips will appear here.</p>
+                </div>
+            </div>
+
+            <button class="btn-primary w-100 mt-auto" onclick="resetApp()">Scan Another</button>
+        </main>
+
+        <!-- Auth Modal -->
+        <div class="modal-overlay hidden" id="auth-modal" style="z-index: 2000;">
+            <div class="modal-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 id="auth-modal-title">Welcome</h2>
+                    <i class="ph ph-x" id="close-auth-btn" style="font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'"></i>
+                </div>
+                <!-- Tab Switcher -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tab-login">Login</button>
+                    <button class="auth-tab" id="tab-register">Create Account</button>
+                </div>
+                <!-- Login Form -->
+                <div id="form-login">
+                    <input type="text" class="input-field" id="login-username" placeholder="Username" autocomplete="username">
+                    <input type="password" class="input-field" id="login-password" placeholder="Password" autocomplete="current-password">
+                    <p class="error-msg hidden" id="login-error"></p>
+                    <button class="btn-primary" id="login-submit-btn" style="width:100%; margin:0; margin-top:0.5rem;">Sign In</button>
+                </div>
+                <!-- Register Form -->
+                <div id="form-register" class="hidden">
+                    <input type="text" class="input-field" id="reg-username" placeholder="Choose a username" autocomplete="username">
+                    <input type="password" class="input-field" id="reg-password" placeholder="Choose a password" autocomplete="new-password">
+                    <p class="error-msg hidden" id="reg-error"></p>
+                    <button class="btn-primary" id="reg-submit-btn" style="width:100%; margin:0; margin-top:0.5rem;">Create Account</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Modal -->
+        <div class="modal-overlay hidden" id="pricing-modal" style="z-index: 2100;">
+            <div class="modal-content pricing-modal-content">
+                <div class="pricing-header">
+                    <div class="pricing-title-group">
+                        <h2>Refill Scans</h2>
+                        <p>Choose a plan to continue discovering worth.</p>
+                    </div>
+                    <i class="ph ph-x close-pricing-btn" id="close-pricing-btn"></i>
+                </div>
+
+                <div class="pricing-grid" id="pricing-grid">
+                    <!-- Pricing cards will be injected here via JS to handle localization -->
+                </div>
+
+                <div class="pricing-footer">
+                    <p><i class="ph ph-shield-check"></i> Secure encrypted checkout</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Modal / Profile Dashboard -->
+        <div class="modal-overlay hidden" id="history-modal" style="z-index: 2000;">
+            <div class="modal-content history-modal-content">
+
+                <!-- Profile Header -->
+                <div class="history-header">
+                    <div class="history-user">
+                        <div class="history-avatar" id="history-avatar">?</div>
+                        <div>
+                            <div id="history-username" class="history-username-text">username</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary);">Member</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap: 0.75rem;">
+                        <i class="ph ph-sign-out" id="logout-btn" title="Logout" style="font-size: 1.4rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'"></i>
+                        <i class="ph ph-x" id="close-history-btn" style="font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'"></i>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="history-stats">
+                    <div class="stat-box">
+                        <span class="stat-value" id="stat-scans-done">0</span>
+                        <span class="stat-label">Scans Done</span>
+                    </div>
+                    <div class="stat-box stat-box-muted">
+                        <span class="stat-value">∞</span>
+                        <span class="stat-label">Scans Left</span>
+                    </div>
+                </div>
+
+                <!-- Section label -->
+                <div style="padding: 0 1.25rem 0.5rem 1.25rem; font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; flex-shrink:0;">History</div>
+
+                <!-- Scan Grid -->
+                <div id="history-list" class="history-grid">
+                    <!-- Javascript will inject grid cards here -->
+                    <p class="hint-text" style="text-align:center; margin-top:1rem; grid-column:1/-1;">No scans yet. Start scanning!</p>
+                </div>
+
+            </div>
+        </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
