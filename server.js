@@ -121,17 +121,30 @@ app.post('/api/analyze', upload.array('images', 5), async (req, res) => {
         
         const result = await analyzeImage(req.files, timezone);
 
-        // Save the first image to uploads folder
+        // Save the first image to Supabase Storage
         let savedImagePath = null;
         if (req.files && req.files.length > 0) {
-            const uploadDir = path.join(__dirname, 'uploads');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
+            const file = req.files[0];
             const fileName = `scan-${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`;
-            const filePath = path.join(uploadDir, fileName);
-            fs.writeFileSync(filePath, req.files[0].buffer);
-            savedImagePath = `/uploads/${fileName}`;
+            
+            const { data: storageData, error: storageError } = await supabase
+                .storage
+                .from('scans')
+                .upload(fileName, file.buffer, {
+                    contentType: file.mimetype,
+                    upsert: false
+                });
+
+            if (storageError) {
+                console.error('Supabase Storage Error:', storageError);
+            } else {
+                const { data: urlData } = supabase
+                    .storage
+                    .from('scans')
+                    .getPublicUrl(fileName);
+                
+                savedImagePath = urlData.publicUrl;
+            }
         }
 
         // Only save history and deduct scans if a real user is logged in
