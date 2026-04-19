@@ -147,36 +147,34 @@ app.post('/api/analyze', upload.array('images', 5), async (req, res) => {
             }
         }
 
-        // Only save history and deduct scans if a real user is logged in
-        if (user && user.id) {
-            // Deduct 1 scan if not admin
-            if (user.role !== 'admin') {
-                await supabase
-                    .from('users')
-                    .update({ available_scans: user.available_scans - 1 })
-                    .eq('id', user.id);
-            }
-
-            // Save to History Database - Use lowercase column names for PostgreSQL
-            const { error: insertError } = await supabase
-                .from('scans')
-                .insert([{
-                    user_id: user.id,
-                    brand: result.brand,
-                    type: result.type,
-                    auth_score: result.authScore,
-                    rarity_stars: result.rarityStars,
-                    original_price: result.originalPrice,
-                    thrift_price: result.thriftPrice,
-                    market_links: JSON.stringify(result.marketLinks),
-                    era: result.era,
-                    history: result.history,
-                    auth_tips: result.authTips,
-                    image_path: savedImagePath
-                }]);
-            
-            if (insertError) console.error('History save error:', insertError);
+        // Save history and deduct scans logic
+        if (user && user.id && user.role !== 'admin') {
+            // Only deduct 1 scan if user is logged in and not an admin
+            await supabase
+                .from('users')
+                .update({ available_scans: user.available_scans - 1 })
+                .eq('id', user.id);
         }
+
+        // Save to History Database for EVERYONE (including guests/null user_id)
+        const { error: insertError } = await supabase
+            .from('scans')
+            .insert([{
+                user_id: user ? user.id : null,
+                brand: result.brand,
+                type: result.type,
+                auth_score: result.authScore,
+                rarity_stars: result.rarityStars,
+                original_price: result.originalPrice,
+                thrift_price: result.thriftPrice,
+                market_links: JSON.stringify(result.marketLinks),
+                era: result.era,
+                history: result.history,
+                auth_tips: result.authTips,
+                image_path: savedImagePath
+            }]);
+        
+        if (insertError) console.error('Database history save error:', insertError);
 
         res.json({ ...result, scans_left: 'unlimited' });
     } catch (error) {
